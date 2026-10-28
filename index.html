@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Михайло Демидов — зошит</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cell: 28px;               /* розмір клітинки; увесь текст вирівняний по ній */
+    --paper: #f6f3ea;
+    --grid: rgba(86, 132, 190, .38);
+    --margin: rgba(204, 60, 60, .62);
+    --ink: #1b3590;
+    --pencil: #4a4a4f;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 96px 16px 96px;
+    font-family: "Caveat", "Marck Script", cursive;
+    color: var(--ink);
+    /* стіл: дерево з волокнами */
+    background-color: #6b4a2f;
+    background-image:
+      radial-gradient(ellipse at 30% 10%, rgba(255,220,170,.35), transparent 60%),
+      radial-gradient(ellipse at 100% 100%, rgba(0,0,0,.55), transparent 55%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='900'><filter id='w' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.004 .09' numOctaves='5' seed='7'/><feColorMatrix values='0 0 0 0 .25  0 0 0 0 .14  0 0 0 0 .05  0 0 0 1.6 -.45'/></filter><rect width='100%' height='100%' filter='url(%23w)'/></svg>");
+    background-attachment: fixed;
+  }
+
+  /* ---------- зошит ---------- */
+  .notebook {
+    position: relative;
+    max-width: 860px;
+    margin: 0 auto;
+    transform: rotate(-.6deg);
+    filter: drop-shadow(0 30px 28px rgba(0,0,0,.45)) drop-shadow(0 4px 5px rgba(0,0,0,.35));
+  }
+  /* стос сторінок знизу */
+  .notebook::before, .notebook::after {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    background: #e9e5d8; border-radius: 3px 8px 8px 3px;
+  }
+  .notebook::before { transform: translate(5px, 6px) rotate(.5deg); background: #dcd8c9; }
+  .notebook::after  { transform: translate(2px, 3px) rotate(.2deg); }
+
+  .page {
+    position: relative; z-index: 1;
+    padding: calc(var(--cell) * 2) calc(var(--cell) * 1.5) calc(var(--cell) * 3) calc(var(--cell) * 3.5);
+    border-radius: 3px 8px 8px 3px;
+    background-color: var(--paper);
+    background-image:
+      /* поля */
+      linear-gradient(90deg, transparent calc(var(--cell) * 2.5 - 1px), var(--margin) calc(var(--cell) * 2.5 - 1px), var(--margin) calc(var(--cell) * 2.5 + 1px), transparent calc(var(--cell) * 2.5 + 1px)),
+      /* клітинка */
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 100% 100%, var(--cell) var(--cell), var(--cell) var(--cell);
+    background-position: 0 0, 0 0, 0 0;
+    overflow: hidden;
+    min-height: calc(100vh - 150px);
+    line-height: var(--cell);
+    font-size: 25px;
+  }
+  /* волокна та зерно паперу */
+  .page::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' seed='3'/><feColorMatrix values='0 0 0 0 .3  0 0 0 0 .27  0 0 0 0 .2  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.012 .02' numOctaves='3' seed='11'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .35  0 0 0 .35 -.08'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>");
+    mix-blend-mode: multiply;
+    opacity: .75;
+  }
+  /* освітлення: світло зверху-ліворуч, затемнення до країв і до палітурки */
+  .page::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 6;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,.22), rgba(0,0,0,.04) 40px, transparent 90px),
+      radial-gradient(ellipse at 25% 0%, rgba(255,255,255,.55), transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(60,40,10,.22), transparent 60%);
+    box-shadow: inset 0 0 40px rgba(110,90,50,.25), inset -2px 0 3px rgba(0,0,0,.12);
+  }
+
+  /* ---------- спіраль ---------- */
+  .spiral {
+    position: absolute; z-index: 10; top: 0; bottom: 0; left: -14px; width: 56px;
+    pointer-events: none;
+    display: flex; flex-direction: column; justify-content: space-around;
+    padding: 14px 0;
+  }
+  .ring {
+    position: relative; height: 16px; width: 56px;
+  }
+  /* отвір у папері */
+  .ring::before {
+    content: ""; position: absolute; left: 30px; top: 0; width: 16px; height: 16px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #3a2a1a 0%, #1c140c 70%);
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.8), 0 1px 0 rgba(255,255,255,.5);
+  }
+  /* металевий дріт */
+  .ring::after {
+    content: ""; position: absolute; left: 0; top: 3px; width: 44px; height: 10px; border-radius: 10px;
+    background: linear-gradient(180deg, #f4f4f4 0%, #a9abb0 35%, #5e6066 60%, #c9cbd0 85%, #7d7f85 100%);
+    box-shadow: 0 5px 5px rgba(0,0,0,.45), inset 0 -1px 1px rgba(0,0,0,.4);
+  }
+
+  /* ---------- рукопис ---------- */
+  .ink { filter: url(#ink); text-shadow: 0 0 .6px rgba(27,53,144,.7); }
+  h1, h2, p, ul, li, nav, footer { margin: 0; padding: 0; }
+  h1 {
+    font-family: "Marck Script", cursive; font-weight: 400;
+    font-size: 54px; line-height: calc(var(--cell) * 2);
+    transform: rotate(-1deg); transform-origin: left;
+  }
+  .underline {
+    display: block; height: var(--cell); margin-top: -4px;
+  }
+  .underline path { stroke: var(--ink); fill: none; stroke-width: 2.4; stroke-linecap: round; }
+  h2 {
+    font-family: "Marck Script", cursive; font-weight: 400;
+    font-size: 34px; line-height: var(--cell);
+    margin-top: var(--cell);
+  }
+  h2 span { border-bottom: 2px solid var(--ink); padding-bottom: 0; }
+  p { margin-bottom: 0; }
+  .date { font-size: 21px; color: var(--pencil); text-align: right; margin-top: -56px; padding-right: 8px; }
+  ul { list-style: none; }
+  li { position: relative; padding-left: 40px; }
+  li::before {
+    content: ""; position: absolute; left: 4px; top: 5px; width: 18px; height: 18px;
+    border: 2px solid var(--ink); border-radius: 2px; transform: rotate(-2deg);
+  }
+  li.done::after {
+    content: "✓"; position: absolute; left: 6px; top: -4px; font-size: 34px; color: #c62828;
+    font-family: "Marck Script", cursive; transform: rotate(-6deg);
+  }
+  li small { color: var(--pencil); font-size: 20px; }
+  a { color: inherit; text-decoration: none; background-image: linear-gradient(var(--ink), var(--ink)); background-size: 100% 2px; background-position: 0 90%; background-repeat: no-repeat; }
+  a:hover { color: #c62828; background-image: linear-gradient(#c62828, #c62828); }
+  .note {
+    color: var(--pencil); font-size: 22px; transform: rotate(-1.5deg); display: inline-block;
+    font-family: "Caveat", cursive;
+  }
+  footer { margin-top: var(--cell); font-size: 21px; color: var(--pencil); }
+
+  /* ---------- липка стрічка, скріпка, пляма ---------- */
+  .tape {
+    position: absolute; z-index: 8; width: 130px; height: 34px; top: -12px; right: 70px;
+    background: linear-gradient(180deg, rgba(255,240,170,.8), rgba(240,220,140,.7));
+    transform: rotate(4deg);
+    box-shadow: 0 2px 4px rgba(0,0,0,.25);
+    clip-path: polygon(0 8%, 3% 0, 6% 10%, 9% 0, 12% 8%, 100% 0, 97% 25%, 100% 50%, 97% 75%, 100% 100%, 0 92%, 3% 75%, 0 50%, 3% 25%);
+    opacity: .92;
+  }
+  .stain {
+    position: absolute; z-index: 4; right: 40px; bottom: 90px; width: 190px; height: 190px; border-radius: 50%;
+    background: radial-gradient(circle, transparent 58%, rgba(120,76,30,.28) 62%, rgba(120,76,30,.12) 70%, transparent 74%);
+    mix-blend-mode: multiply; transform: scale(1.1, .95) rotate(20deg);
+    pointer-events: none;
+  }
+  .clip {
+    position: absolute; z-index: 9; width: 30px; height: 84px; top: 260px; right: -4px;
+    border: 4px solid #aeb2b8; border-radius: 16px 16px 14px 14px;
+    border-bottom-color: #8e9298;
+    transform: rotate(8deg);
+    filter: drop-shadow(2px 3px 2px rgba(0,0,0,.4));
+    pointer-events: none;
+  }
+  .clip::before {
+    content: ""; position: absolute; left: 4px; right: -2px; top: 18px; bottom: -14px;
+    border: 4px solid #cfd2d7; border-radius: 12px;
+  }
+
+
+  /* ---------- вирваний шматок-вкладка ---------- */
+  .tab {
+    position: absolute; z-index: 1; top: -46px; left: 150px; width: 168px; height: 84px;
+    padding-top: 8px; text-align: center;
+    font-family: "Marck Script", cursive; font-size: 30px; line-height: 40px;
+    color: var(--ink); background-image: none;
+    background-color: #f1ecdc;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+      linear-gradient(180deg, rgba(255,255,255,.4), rgba(120,100,60,.18));
+    background-size: 24px 24px, 24px 24px, 100% 100%;
+    /* рвана верхня кромка */
+    clip-path: polygon(0 14%, 5% 8%, 11% 15%, 17% 6%, 24% 13%, 31% 5%, 38% 14%, 46% 7%, 53% 15%, 61% 6%, 68% 13%, 76% 5%, 83% 14%, 91% 7%, 100% 12%, 100% 100%, 0 100%);
+    transform: rotate(-2deg);
+    transition: transform .2s ease;
+    filter: url(#ink);
+  }
+  .tab:hover { transform: rotate(-2deg) translateY(-8px); color: #c62828; }
+  .tab span { display: inline-block; border-bottom: 2px solid currentColor; line-height: 30px; }
+
+  /* ---------- мобільні ---------- */
+  @media (max-width: 640px) {
+    :root { --cell: 24px; }
+    body { padding: 28px 8px 64px; }
+    .page { font-size: 21px; padding-left: calc(var(--cell) * 3.2); padding-right: calc(var(--cell) * .8); }
+    h1 { font-size: 40px; }
+    h2 { font-size: 28px; }
+    .date { margin-top: 0; text-align: left; }
+    .clip, .stain { display: none; }
+    .tab { left: 60px; width: 140px; font-size: 26px; }
+    .spiral { left: -10px; transform: scale(.8); transform-origin: left; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .notebook { animation: drop .8s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes drop { from { opacity: 0; transform: translateY(40px) rotate(-2deg); } }
+  }
+</style>
+</head>
+<body>
+
+<!-- ефект «нерівного» чорнила -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="ink" x="-2%" y="-5%" width="104%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" result="t"/>
+    <feDisplacementMap in="SourceGraphic" in2="t" scale="1.6" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<main class="notebook">
+  <div class="spiral" aria-hidden="true">
+  </div>
+
+  <a class="tab" href="https://qr.demydov.xyz"><span>QR коди ↗</span></a>
+  <div class="tape" aria-hidden="true"></div>
+  <div class="clip" aria-hidden="true"></div>
+
+  <article class="page">
+    <div class="stain" aria-hidden="true"></div>
+    <div class="ink">
+
+      <p class="date">28 жовтня 2026</p>
+
+      <h1>Михайло Демидов</h1>
+      <svg class="underline" viewBox="0 0 400 28" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M4 14 C 80 4, 160 22, 250 10 S 370 16, 396 8"/>
+      </svg>
+
+      <p>Ну надєюсь це досить унікальний дизайн сайту</p>
+    </div>
+  </article>
+</main>
+
+<script>
+  // кільця спіралі: одне на ~2 клітинки висоти сторінки
+  const spiral = document.querySelector('.spiral');
+  const fillSpiral = () => {
+    const n = Math.max(8, Math.round(spiral.parentNode.offsetHeight / 62));
+    spiral.innerHTML = '<i class="ring"></i>'.repeat(n);
+  };
+  fillSpiral();
+  addEventListener('resize', fillSpiral);
+  document.fonts && document.fonts.ready.then(fillSpiral);
+</script>
+</body>
+</html>
